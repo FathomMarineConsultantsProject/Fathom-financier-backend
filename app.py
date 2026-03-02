@@ -9,7 +9,7 @@ from sqlalchemy.exc import OperationalError
 app = FastAPI(title="Fathom Employee API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "https://fmc-employee-details-form-frontend.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
