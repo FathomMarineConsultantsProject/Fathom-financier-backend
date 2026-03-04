@@ -27,7 +27,7 @@ class EmployeeCreate(BaseModel):
 
     # ✅ New family fields
     siblings: str = Field(min_length=1)
-    localGuardian: str = Field(min_length=1)
+    localGuardian: Optional[str]= None
 
     bankAccountHolderName: str = Field(min_length=2)
     bankAccountNumber: str = Field(min_length=6, max_length=18)
