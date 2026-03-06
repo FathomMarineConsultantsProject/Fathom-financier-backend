@@ -1,6 +1,6 @@
 import json
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query
-from Backend.src.services.s3 import generate_presigned_download_url, upload_file_to_s3
+from src.services.s3 import generate_presigned_download_url, upload_file_to_s3
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
