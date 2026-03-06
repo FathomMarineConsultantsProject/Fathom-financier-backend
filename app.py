@@ -10,7 +10,7 @@ from src.routes.debug import router as debug_router
 app = FastAPI(title="Fathom Employee API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://fmc-employee-details-form.vercel.app", "https://fmc-employee-details-form-fmc-projects-projects.vercel.app"],
+    allow_origins=["http://localhost:5173", "https://fmc-employee-details-form.vercel.app", "https://fmc-employee-details-form-fmc-projects-projects.vercel.app","https://fathom-financier-admin.vercel.app/employees"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
