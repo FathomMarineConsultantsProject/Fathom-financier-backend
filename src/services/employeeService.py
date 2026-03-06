@@ -8,8 +8,8 @@ def create_employee(
     employee: EmployeeCreate,
     documents_path: str,
     cheque_path: str,
-    police_report_path,
-    medical_report_path
+    police_report_path: str | None,
+    medical_report_path: str | None,
 ):
     db_employee = Employee(
         full_name=employee.fullName,
@@ -34,6 +34,9 @@ def create_employee(
         father_name=employee.fatherName,
         mother_name=employee.motherName,
 
+        siblings=employee.siblings,
+        local_guardian=employee.localGuardian,
+
         bank_account_holder_name=employee.bankAccountHolderName,
         bank_account_number=employee.bankAccountNumber,
         bank_ifsc_code=employee.bankIfscCode,
@@ -54,18 +57,14 @@ def create_employee(
         tshirt_size=employee.tshirtSize,
         shoe_size=employee.shoeSize,
 
-        has_medical_insurance=employee.hasMedicalInsurance,
-        medical_issues=employee.medicalIssues,
         police_verification=employee.policeVerification,
-police_station=employee.policeStation,
+        police_station=employee.policeStation,
+        police_report_path=police_report_path,
 
-siblings=employee.siblings,
-local_guardian=employee.localGuardian,
-
-medical_report_recent=employee.medicalReportRecent,
-
-police_report_path=police_report_path,
-medical_report_path=medical_report_path,
+        has_medical_insurance=employee.hasMedicalInsurance,
+        medical_report_recent=employee.medicalReportRecent,
+        medical_report_path=medical_report_path,
+        medical_issues=employee.medicalIssues,
 
         documents_path=documents_path,
         cheque_path=cheque_path,

@@ -1,5 +1,6 @@
 import json
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query
+from Backend.src.services.s3 import generate_presigned_download_url, upload_file_to_s3
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
@@ -7,13 +8,13 @@ from src.db.database import get_db
 from src.models.employeeModel import Employee
 from src.schemas.employeeSchema import EmployeeCreate
 from src.services.employeeService import create_employee
-from src.services.storage import (
-    save_file,
-    DOC_DIR,
-    CHEQUE_DIR,
-    DOC_MAX,
-    CHEQUE_MAX,
-)
+# from src.services.storage import (
+#     save_file,
+#     DOC_DIR,
+#     CHEQUE_DIR,
+#     DOC_MAX,
+#     CHEQUE_MAX,
+# )
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
 
@@ -34,18 +35,18 @@ async def create_employee_api(
         raise HTTPException(status_code=400, detail=str(e))
 
     # ✅ Save mandatory files
-    documents_path = await save_file(documentsFile, DOC_DIR, DOC_MAX)
-    cheque_path = await save_file(bankCancelledCheque, CHEQUE_DIR, CHEQUE_MAX)
+    documents_path = await upload_file_to_s3(documentsFile, "employees-documents")
+    cheque_path = await upload_file_to_s3(bankCancelledCheque, "employees-cheques")
 
     # ✅ Save optional files
     police_report_path = None
     medical_report_path = None
 
     if policeReportFile:
-        police_report_path = await save_file(policeReportFile, DOC_DIR, DOC_MAX)
+        police_report_path = await upload_file_to_s3(policeReportFile, "employees-police")
 
     if medicalReportFile:
-        medical_report_path = await save_file(medicalReportFile, DOC_DIR, DOC_MAX)
+        medical_report_path = await upload_file_to_s3(medicalReportFile, "employees-medical")
 
     # ✅ Create employee in DB
     employee = create_employee(
@@ -221,4 +222,17 @@ def get_employee_by_id(employee_id: int, db: Session = Depends(get_db)):
         "cheque_path": emp.cheque_path,
 
         "created_at": emp.created_at,
+    }
+@router.get("/{employee_id}/files")
+def get_employee_files(employee_id: int, db: Session = Depends(get_db)):
+    emp = db.query(Employee).filter(Employee.id == employee_id).first()
+
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    return {
+        "documents_url": generate_presigned_download_url(emp.documents_path) if emp.documents_path else None,
+        "cheque_url": generate_presigned_download_url(emp.cheque_path) if emp.cheque_path else None,
+        "police_report_url": generate_presigned_download_url(emp.police_report_path) if emp.police_report_path else None,
+        "medical_report_url": generate_presigned_download_url(emp.medical_report_path) if emp.medical_report_path else None,
     }
