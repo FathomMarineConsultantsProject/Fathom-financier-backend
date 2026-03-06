@@ -1,6 +1,5 @@
 import json
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query
-from src.services.s3 import generate_presigned_download_url, upload_file_to_s3
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
@@ -8,13 +7,7 @@ from src.db.database import get_db
 from src.models.employeeModel import Employee
 from src.schemas.employeeSchema import EmployeeCreate
 from src.services.employeeService import create_employee
-# from src.services.storage import (
-#     save_file,
-#     DOC_DIR,
-#     CHEQUE_DIR,
-#     DOC_MAX,
-#     CHEQUE_MAX,
-# )
+from src.services.s3 import generate_presigned_download_url, upload_file_to_s3
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
 
@@ -28,17 +21,14 @@ async def create_employee_api(
     medicalReportFile: UploadFile | None = File(None),
     db: Session = Depends(get_db),
 ):
-    # ✅ Parse JSON data
     try:
         parsed_data = EmployeeCreate(**json.loads(data))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    # ✅ Save mandatory files
     documents_path = await upload_file_to_s3(documentsFile, "employees-documents")
     cheque_path = await upload_file_to_s3(bankCancelledCheque, "employees-cheques")
 
-    # ✅ Save optional files
     police_report_path = None
     medical_report_path = None
 
@@ -48,7 +38,6 @@ async def create_employee_api(
     if medicalReportFile:
         medical_report_path = await upload_file_to_s3(medicalReportFile, "employees-medical")
 
-    # ✅ Create employee in DB
     employee = create_employee(
         db,
         parsed_data,
@@ -73,7 +62,6 @@ def get_all_employees(
 ):
     query = db.query(Employee)
 
-    # ✅ Search across common fields
     if q and q.strip():
         search = f"%{q.strip()}%"
         query = query.filter(
@@ -91,7 +79,7 @@ def get_all_employees(
     total = query.count()
 
     employees = (
-        query.order_by(Employee.created_at.desc())  # ✅ newest first
+        query.order_by(Employee.created_at.desc())
         .offset((page - 1) * limit)
         .limit(limit)
         .all()
@@ -101,54 +89,62 @@ def get_all_employees(
 
     return {
         "items": [
-    {
-        "id": e.id,
-        "full_name": e.full_name,
-        "latest_qualification": e.latest_qualification,
-        "email": e.email,
-        "phone_number": e.phone_number,
-        "address": e.address,
-        "city": e.city,
-        "state": e.state,
-        "postal_code": e.postal_code,
-        "aadhar_name": e.aadhar_name,
-        "aadhar_number": e.aadhar_number,
-        "passport_number": e.passport_number,
-        "passport_validity": e.passport_validity,
-        "pan_number": e.pan_number,
-        "father_name": e.father_name,
-        "mother_name": e.mother_name,
-        "siblings": e.siblings,
-        "local_guardian": e.local_guardian,
-        "bank_account_holder_name": e.bank_account_holder_name,
-        "bank_account_number": e.bank_account_number,
-        "bank_ifsc_code": e.bank_ifsc_code,
-        "bank_branch_name": e.bank_branch_name,
-        "emergency_contact_name": e.emergency_contact_name,
-        "emergency_contact_phone": e.emergency_contact_phone,
-        "emergency_contact_email": e.emergency_contact_email,
-        "emergency_contact_relation": e.emergency_contact_relation,
-        "hobbies": e.hobbies,
-        "books_like_to_read": e.books_like_to_read,
-        "sports_you_play": e.sports_you_play,
-        "favourite_artist": e.favourite_artist,
-        "favourite_cuisine": e.favourite_cuisine,
-        "favourite_movies_bollywood": e.favourite_movies_bollywood,
-        "tshirt_size": e.tshirt_size,
-        "shoe_size": e.shoe_size,
-        "police_verification": e.police_verification,
-        "police_station": e.police_station,
-        "police_report_path": e.police_report_path,
-        "has_medical_insurance": e.has_medical_insurance,
-        "medical_report_recent": e.medical_report_recent,
-        "medical_report_path": e.medical_report_path,
-        "medical_issues": e.medical_issues,
-        "documents_path": e.documents_path,
-        "cheque_path": e.cheque_path,
-        "created_at": e.created_at,
-    }
-    for e in employees
-],
+            {
+                "id": e.id,
+                "full_name": e.full_name,
+                "latest_qualification": e.latest_qualification,
+                "email": e.email,
+                "phone_number": e.phone_number,
+                "address": e.address,
+                "city": e.city,
+                "state": e.state,
+                "postal_code": e.postal_code,
+                "aadhar_name": e.aadhar_name,
+                "aadhar_number": e.aadhar_number,
+                "passport_number": e.passport_number,
+                "passport_validity": e.passport_validity,
+                "pan_number": e.pan_number,
+                "father_name": e.father_name,
+                "mother_name": e.mother_name,
+                "siblings": e.siblings,
+                "local_guardian": e.local_guardian,
+                "bank_account_holder_name": e.bank_account_holder_name,
+                "bank_account_number": e.bank_account_number,
+                "bank_ifsc_code": e.bank_ifsc_code,
+                "bank_branch_name": e.bank_branch_name,
+                "emergency_contact_name": e.emergency_contact_name,
+                "emergency_contact_phone": e.emergency_contact_phone,
+                "emergency_contact_email": e.emergency_contact_email,
+                "emergency_contact_relation": e.emergency_contact_relation,
+                "hobbies": e.hobbies,
+                "books_like_to_read": e.books_like_to_read,
+                "sports_you_play": e.sports_you_play,
+                "favourite_artist": e.favourite_artist,
+                "favourite_cuisine": e.favourite_cuisine,
+                "favourite_movies_bollywood": e.favourite_movies_bollywood,
+                "tshirt_size": e.tshirt_size,
+                "shoe_size": e.shoe_size,
+                "police_verification": e.police_verification,
+                "police_station": e.police_station,
+                "has_medical_insurance": e.has_medical_insurance,
+                "medical_report_recent": e.medical_report_recent,
+                "medical_issues": e.medical_issues,
+                "created_at": e.created_at,
+
+                # raw keys / paths
+                "police_report_path": e.police_report_path,
+                "medical_report_path": e.medical_report_path,
+                "documents_path": e.documents_path,
+                "cheque_path": e.cheque_path,
+
+                # presigned URLs for frontend
+                "police_report_url": generate_presigned_download_url(e.police_report_path) if e.police_report_path else None,
+                "medical_report_url": generate_presigned_download_url(e.medical_report_path) if e.medical_report_path else None,
+                "documents_url": generate_presigned_download_url(e.documents_path) if e.documents_path else None,
+                "cheque_url": generate_presigned_download_url(e.cheque_path) if e.cheque_path else None,
+            }
+            for e in employees
+        ],
         "page": page,
         "limit": limit,
         "total": total,
@@ -162,7 +158,6 @@ def get_employee_by_id(employee_id: int, db: Session = Depends(get_db)):
     if not emp:
         raise HTTPException(status_code=404, detail="Employee not found")
 
-    # ✅ Full profile (based on your Employee model)
     return {
         "id": emp.id,
         "full_name": emp.full_name,
@@ -211,18 +206,27 @@ def get_employee_by_id(employee_id: int, db: Session = Depends(get_db)):
 
         "police_verification": emp.police_verification,
         "police_station": emp.police_station,
-        "police_report_path": emp.police_report_path,
 
         "has_medical_insurance": emp.has_medical_insurance,
         "medical_report_recent": emp.medical_report_recent,
-        "medical_report_path": emp.medical_report_path,
         "medical_issues": emp.medical_issues,
 
+        "created_at": emp.created_at,
+
+        # raw keys / paths
+        "police_report_path": emp.police_report_path,
+        "medical_report_path": emp.medical_report_path,
         "documents_path": emp.documents_path,
         "cheque_path": emp.cheque_path,
 
-        "created_at": emp.created_at,
+        # presigned URLs
+        "police_report_url": generate_presigned_download_url(emp.police_report_path) if emp.police_report_path else None,
+        "medical_report_url": generate_presigned_download_url(emp.medical_report_path) if emp.medical_report_path else None,
+        "documents_url": generate_presigned_download_url(emp.documents_path) if emp.documents_path else None,
+        "cheque_url": generate_presigned_download_url(emp.cheque_path) if emp.cheque_path else None,
     }
+
+
 @router.get("/{employee_id}/files")
 def get_employee_files(employee_id: int, db: Session = Depends(get_db)):
     emp = db.query(Employee).filter(Employee.id == employee_id).first()
