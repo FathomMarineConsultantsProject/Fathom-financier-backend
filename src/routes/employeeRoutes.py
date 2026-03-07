@@ -137,9 +137,9 @@ def get_all_employees(
                 "cheque_path": e.cheque_path,
 
                 "police_report_url": safe_presigned_url(e.police_report_path),
-                "medical_report_url": safe_presigned_url(e.medical_report_path),
-                "documents_url": safe_presigned_url(e.documents_path),
-                "cheque_url": safe_presigned_url(e.cheque_path),
+"medical_report_url": safe_presigned_url(e.medical_report_path),
+"documents_url": safe_presigned_url(e.documents_path),
+"cheque_url": safe_presigned_url(e.cheque_path),
             }
             for e in employees
         ],
@@ -204,9 +204,9 @@ def get_employee_by_id(employee_id: int, db: Session = Depends(get_db)):
         "cheque_path": emp.cheque_path,
 
         "police_report_url": safe_presigned_url(emp.police_report_path),
-        "medical_report_url": safe_presigned_url(emp.medical_report_path),
-        "documents_url": safe_presigned_url(emp.documents_path),
-        "cheque_url": safe_presigned_url(emp.cheque_path),
+"medical_report_url": safe_presigned_url(emp.medical_report_path),
+"documents_url": safe_presigned_url(emp.documents_path),
+"cheque_url": safe_presigned_url(emp.cheque_path),
     }
 
 
@@ -218,8 +218,8 @@ def get_employee_files(employee_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Employee not found")
 
     return {
-        "documents_url": safe_presigned_url(emp.documents_path),
-        "cheque_url": safe_presigned_url(emp.cheque_path),
-        "police_report_url": safe_presigned_url(emp.police_report_path),
-        "medical_report_url": safe_presigned_url(emp.medical_report_path),
-    }
+    "documents_url": safe_presigned_url(emp.documents_path),
+    "cheque_url": safe_presigned_url(emp.cheque_path),
+    "police_report_url": safe_presigned_url(emp.police_report_path),
+    "medical_report_url": safe_presigned_url(emp.medical_report_path),
+}

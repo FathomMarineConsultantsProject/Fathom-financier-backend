@@ -60,8 +60,8 @@ async def upload_file_to_s3(file: UploadFile, folder: str) -> str:
             Key=key,
             ExtraArgs=extra_args,
         )
-
         return key
+
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"S3 upload failed: {str(e)}")
 
@@ -76,10 +76,7 @@ def s3_object_exists(key: str) -> bool:
 
 
 def safe_presigned_url(key: str | None, expires_in: int = 3600) -> str | None:
-    if not key:
-        return None
-
-    if not is_s3_key(key):
+    if not key or not is_s3_key(key):
         return None
 
     if not s3_object_exists(key):
