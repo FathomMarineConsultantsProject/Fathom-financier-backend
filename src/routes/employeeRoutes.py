@@ -7,7 +7,7 @@ from src.db.database import get_db
 from src.models.employeeModel import Employee
 from src.schemas.employeeSchema import EmployeeCreate
 from src.services.employeeService import create_employee
-from src.services.s3 import generate_presigned_download_url, upload_file_to_s3
+from src.services.s3 import safe_presigned_url, upload_file_to_s3
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
 
@@ -131,17 +131,15 @@ def get_all_employees(
                 "medical_issues": e.medical_issues,
                 "created_at": e.created_at,
 
-                # raw keys / paths
                 "police_report_path": e.police_report_path,
                 "medical_report_path": e.medical_report_path,
                 "documents_path": e.documents_path,
                 "cheque_path": e.cheque_path,
 
-                # presigned URLs for frontend
-                "police_report_url": generate_presigned_download_url(e.police_report_path) if e.police_report_path else None,
-                "medical_report_url": generate_presigned_download_url(e.medical_report_path) if e.medical_report_path else None,
-                "documents_url": generate_presigned_download_url(e.documents_path) if e.documents_path else None,
-                "cheque_url": generate_presigned_download_url(e.cheque_path) if e.cheque_path else None,
+                "police_report_url": safe_presigned_url(e.police_report_path),
+                "medical_report_url": safe_presigned_url(e.medical_report_path),
+                "documents_url": safe_presigned_url(e.documents_path),
+                "cheque_url": safe_presigned_url(e.cheque_path),
             }
             for e in employees
         ],
@@ -164,66 +162,51 @@ def get_employee_by_id(employee_id: int, db: Session = Depends(get_db)):
         "latest_qualification": emp.latest_qualification,
         "email": emp.email,
         "phone_number": emp.phone_number,
-
         "address": emp.address,
         "city": emp.city,
         "state": emp.state,
         "postal_code": emp.postal_code,
-
         "aadhar_name": emp.aadhar_name,
         "aadhar_number": emp.aadhar_number,
-
         "passport_number": emp.passport_number,
         "passport_validity": emp.passport_validity,
-
         "pan_number": emp.pan_number,
-
         "father_name": emp.father_name,
         "mother_name": emp.mother_name,
-
         "siblings": emp.siblings,
         "local_guardian": emp.local_guardian,
-
         "bank_account_holder_name": emp.bank_account_holder_name,
         "bank_account_number": emp.bank_account_number,
         "bank_ifsc_code": emp.bank_ifsc_code,
         "bank_branch_name": emp.bank_branch_name,
-
         "emergency_contact_name": emp.emergency_contact_name,
         "emergency_contact_phone": emp.emergency_contact_phone,
         "emergency_contact_email": emp.emergency_contact_email,
         "emergency_contact_relation": emp.emergency_contact_relation,
-
         "hobbies": emp.hobbies,
         "books_like_to_read": emp.books_like_to_read,
         "sports_you_play": emp.sports_you_play,
         "favourite_artist": emp.favourite_artist,
         "favourite_cuisine": emp.favourite_cuisine,
         "favourite_movies_bollywood": emp.favourite_movies_bollywood,
-
         "tshirt_size": emp.tshirt_size,
         "shoe_size": emp.shoe_size,
-
         "police_verification": emp.police_verification,
         "police_station": emp.police_station,
-
         "has_medical_insurance": emp.has_medical_insurance,
         "medical_report_recent": emp.medical_report_recent,
         "medical_issues": emp.medical_issues,
-
         "created_at": emp.created_at,
 
-        # raw keys / paths
         "police_report_path": emp.police_report_path,
         "medical_report_path": emp.medical_report_path,
         "documents_path": emp.documents_path,
         "cheque_path": emp.cheque_path,
 
-        # presigned URLs
-        "police_report_url": generate_presigned_download_url(emp.police_report_path) if emp.police_report_path else None,
-        "medical_report_url": generate_presigned_download_url(emp.medical_report_path) if emp.medical_report_path else None,
-        "documents_url": generate_presigned_download_url(emp.documents_path) if emp.documents_path else None,
-        "cheque_url": generate_presigned_download_url(emp.cheque_path) if emp.cheque_path else None,
+        "police_report_url": safe_presigned_url(emp.police_report_path),
+        "medical_report_url": safe_presigned_url(emp.medical_report_path),
+        "documents_url": safe_presigned_url(emp.documents_path),
+        "cheque_url": safe_presigned_url(emp.cheque_path),
     }
 
 
@@ -235,8 +218,8 @@ def get_employee_files(employee_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Employee not found")
 
     return {
-        "documents_url": generate_presigned_download_url(emp.documents_path) if emp.documents_path else None,
-        "cheque_url": generate_presigned_download_url(emp.cheque_path) if emp.cheque_path else None,
-        "police_report_url": generate_presigned_download_url(emp.police_report_path) if emp.police_report_path else None,
-        "medical_report_url": generate_presigned_download_url(emp.medical_report_path) if emp.medical_report_path else None,
+        "documents_url": safe_presigned_url(emp.documents_path),
+        "cheque_url": safe_presigned_url(emp.cheque_path),
+        "police_report_url": safe_presigned_url(emp.police_report_path),
+        "medical_report_url": safe_presigned_url(emp.medical_report_path),
     }
